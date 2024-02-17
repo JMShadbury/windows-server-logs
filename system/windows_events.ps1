@@ -1,5 +1,3 @@
-. "$PSScriptRoot/system/windows_info.ps1"
-
 function Get-WindowsEventLogs {
     $logTypes = @("Application", "System", "Security", "Setup", "ForwardedEvents")
     $eventData = @()
