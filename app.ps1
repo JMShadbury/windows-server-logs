@@ -1,13 +1,12 @@
-# Import other scripts
+
 . "$PSScriptRoot/system/windows_events.ps1"
 . "$PSScriptRoot/util/cloudwatch.ps1"
 . "$PSScriptRoot/util/s3.ps1"
-. "$PSScriptRoot/system/windows_info.ps1"
 . "$PSScriptRoot/dns/dns_logs.ps1"
 
 
 
-$hostname = getHost
+$hostname = hostname
 function Start-LogCollection {
     while ($true) {
         $eventData, $systemCrashLogs = Get-WindowsEventLogs
