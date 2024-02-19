@@ -1,10 +1,7 @@
-function getAgent(){
+function installAgent(){
     $installerUrl = "https://kinesis-agent.s3.ap-southeast-2.amazonaws.com/AWSKinesisTap.1.2.10.2.msi"
     $installerPath = "C:\temp\KinesisAgentInstaller.msi"
     Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
-}
-
-function installAgent(){
     Start-Process msiexec.exe -ArgumentList "/i $installerPath /quiet" -Wait
 }
 

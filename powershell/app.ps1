@@ -1,9 +1,9 @@
-"$PSScriptRoot/agent/kinesis_agent.ps1"
-"$PSScriptRoot/user_details/user.ps1"
+. "$PSScriptRoot/agent/kinesis_agent.ps1"
+. "$PSScriptRoot/user_details/user.ps1"
 
 function createSchedule(){
 
-    $path = '-File '+$PSScriptRoot+'\agent\kinesis_agent.ps1"'
+    $path = '-File '+$PSScriptRoot+'\user_details\user.ps1"'
     $Action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument $path
     $Trigger = New-ScheduledTaskTrigger -AtLogon
     $Principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
@@ -11,9 +11,10 @@ function createSchedule(){
 }
 
 function main(){
-    getAgent
     installAgent
     configureAgent
     startAgent
     createSchedule
 }
+
+main
