@@ -26,7 +26,6 @@ resource "aws_iam_role_policy" "appstream_cloudwatch_policy" {
         Action = [
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-          "logs:CreateLogGroup",
         ],
         Effect = "Allow",
         Resource = aws_cloudwatch_log_group.appstream_log_group.arn,
