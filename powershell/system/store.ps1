@@ -1,48 +1,68 @@
-# Description: This script will store a file in a local cache directory to be accessed at a later date. This may be required by more than one function but should be encrypted incase of sensitive date.
-
 function store_file(
-    [string]$file_path,
     [string]$file_name,
     [string]$file_contents
 ){
     # Create the cache directory if it doesn't exist
-    $cache_dir = "C:\cache"
+    $cache_dir = "$PSScriptRoot\cache"
+    Write-Host "Cache directory: $cache_dir"
     if (-not (Test-Path $cache_dir)) {
         New-Item -ItemType Directory -Path $cache_dir
     }
 
-    # create private key
-    $private_key = New-Object System.Security.Cryptography.RSACryptoServiceProvider
+    # Get or create the encryption key
+    $private_key = GetEncryptionKey -key_path "$PSScriptRoot\key.xml"
 
-    # encrypt the file contents
-    $encrypted_file_contents = $private_key.Encrypt($file_contents, $true)
+    # Encrypt the symmetric key using RSA
+    $aesManaged = New-Object System.Security.Cryptography.AesManaged
+    $aesManaged.GenerateKey()
+    $aesManaged.GenerateIV()
+    $symmetricKey = $aesManaged.Key
+    $iv = $aesManaged.IV
+    $encryptedSymmetricKey = $private_key.Encrypt($symmetricKey, $true)
+    $encryptedIV = $private_key.Encrypt($iv, $true)
 
-    # Store the file in the cache directory
+    # Encrypt the file contents using the symmetric key
+    $encryptor = $aesManaged.CreateEncryptor($symmetricKey, $iv)
+    $ms = New-Object System.IO.MemoryStream
+    $cs = New-Object System.Security.Cryptography.CryptoStream $ms, $encryptor, "Write"
+    $sw = New-Object System.IO.StreamWriter $cs
+    $sw.Write($file_contents)
+    $sw.Flush()
+    $cs.FlushFinalBlock()
+    $encrypted_file_contents = $ms.ToArray()
+
+    # Combine the encrypted symmetric key, IV, and the encrypted data with lengths
+    $combinedData = [BitConverter]::GetBytes($encryptedSymmetricKey.Length) + $encryptedSymmetricKey +
+                    [BitConverter]::GetBytes($encryptedIV.Length) + $encryptedIV +
+                    $encrypted_file_contents
+
+    # Store the combined data in the cache directory
     $file_path = Join-Path -Path $cache_dir -ChildPath $file_name
-    Set-Content -Path $file_path -Value $encrypted_file_contents
+    Write-Host "Storing data at: $file_path"
+    [System.IO.File]::WriteAllBytes($file_path, $combinedData)
+    Write-Host "Data stored successfully."
 }
 
-# Description: This script will retrieve a file from a local cache directory. This may be required by more than one function but should be encrypted incase of sensitive date.
 
 function retrieve_file(
     [string]$file_name
 ){
     # Create the cache directory if it doesn't exist
-    $cache_dir = "C:\cache"
+    $cache_dir = "$PSScriptRoot\cache"
     if (-not (Test-Path $cache_dir)) {
         New-Item -ItemType Directory -Path $cache_dir
     }
 
-    # create private key
-    $private_key = New-Object System.Security.Cryptography.RSACryptoServiceProvider
+    # Use the same key for decryption
+    $private_key = RetrieveEncryptionKey
 
     # Retrieve the file from the cache directory
     $file_path = Join-Path -Path $cache_dir -ChildPath $file_name
-    $file_contents = Get-Content -Path $file_path
+    $encrypted_file_contents = [System.IO.File]::ReadAllBytes($file_path)
 
-    # decrypt the file contents
-    $decrypted_file_contents = $private_key.Decrypt($file_contents, $true)
+    # Decrypt the file contents
+    $decrypted_file_contents = $private_key.Decrypt($encrypted_file_contents, $true)
+    $decrypted_text = [System.Text.Encoding]::UTF8.GetString($decrypted_file_contents)
 
-    return $decrypted_file_contents
+    return $decrypted_text
 }
-```
