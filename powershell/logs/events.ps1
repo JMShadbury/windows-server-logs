@@ -7,7 +7,7 @@ function get_event_log(
     return $events
 }
 
-function get_logs {
+function init_logs {
     try {
         # Get all event logs
         $application_log = get_event_log -log_name "Application"
@@ -37,5 +37,22 @@ function get_logs {
 
     } catch {
         Write-Host "Error getting logs: $_"
+    }
+}
+
+function checkLogs { 
+    $app_log = get_event_log -log_name "Application"
+    $sys_log = get_event_log -log_name "System"
+
+    $app_log_cached = retrieve_file -file_name "event_log.txt"
+    $sys_log_cached = retrieve_file -file_name "system_log.txt"
+
+    if ($app_log -ne $app_log_cached -or $sys_log -ne $sys_log_cached) {
+        into("Update logs.")
+        store_file -file_name "event_log.txt" -file_contents $app_log
+        store_file -file_name "system_log.txt" -file_contents $sys_log
+    }
+    else {
+        info("Logs are up to date.")
     }
 }

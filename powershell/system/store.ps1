@@ -1,13 +1,17 @@
+. "$PSScriptRoot\util\key.ps1"
+. "$PSScriptRoot\util\logger.ps1"
+
 function store_file(
     [string]$file_name,
     [string]$file_contents
 ){
     # Create the cache directory if it doesn't exist
     $cache_dir = "$PSScriptRoot\cache"
-    Write-Host "Cache directory: $cache_dir"
     if (-not (Test-Path $cache_dir)) {
         New-Item -ItemType Directory -Path $cache_dir
     }
+
+    info("Storing file: $file_name")
 
     # Get or create the encryption key
     $private_key = GetEncryptionKey -key_path "$PSScriptRoot\key.xml"
@@ -38,9 +42,7 @@ function store_file(
 
     # Store the combined data in the cache directory
     $file_path = Join-Path -Path $cache_dir -ChildPath $file_name
-    Write-Host "Storing data at: $file_path"
     [System.IO.File]::WriteAllBytes($file_path, $combinedData)
-    Write-Host "Data stored successfully."
 }
 
 
