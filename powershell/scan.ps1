@@ -3,5 +3,5 @@
 
 function scan {
     $logs = get_logs
-    $logs
+    store_file -file_name "logs.txt" -file_contents $logs
 }
