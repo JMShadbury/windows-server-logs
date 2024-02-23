@@ -8,6 +8,7 @@ function get_event_log(
 }
 
 function init_logs {
+    info("Initializing logs.")
     try {
         # Get all event logs
         $application_log = get_event_log -log_name "Application"
@@ -40,15 +41,16 @@ function init_logs {
     }
 }
 
-function checkLogs { 
+function check_logs { 
+    info("Checking logs.")
     $app_log = get_event_log -log_name "Application"
     $sys_log = get_event_log -log_name "System"
-
+    info("Logs checked... Comparing with cached logs.")
     $app_log_cached = retrieve_file -file_name "event_log.txt"
     $sys_log_cached = retrieve_file -file_name "system_log.txt"
 
     if ($app_log -ne $app_log_cached -or $sys_log -ne $sys_log_cached) {
-        into("Update logs.")
+        into("Logs are not up to date. Storing logs.")
         store_file -file_name "event_log.txt" -file_contents $app_log
         store_file -file_name "system_log.txt" -file_contents $sys_log
     }
